@@ -1,0 +1,55 @@
+name: Build Windows Installer
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Get source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+
+      - name: Package application
+        run: pyinstaller --noconfirm --clean --windowed --onedir --name PCDistance --icon icon.ico --add-data "web;web" --collect-all flask --collect-all mss --collect-all qrcode --collect-all pyautogui --hidden-import pygetwindow --hidden-import pyrect --hidden-import pymsgbox --hidden-import pyscreeze --hidden-import pytweening --hidden-import mouseinfo app.py
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Create installer
+        shell: pwsh
+        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: PC-Distance-Windows-Installer
+          path: dist/PCDistance-Setup.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/PCDistance-Setup.exe
+          generate_release_notes: true
