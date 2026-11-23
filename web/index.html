@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101116">
+<title>PC Distance</title>
+<style>
+:root{color-scheme:dark;--bg:#101116;--panel:#191c25;--panel2:#202431;--line:#2b3040;--text:#f4f5f8;--muted:#929bad;--accent:#7568ff;--good:#65d69a;--bad:#ff737d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;min-height:100vh}
+button,input,textarea{font:inherit}
+button{border:0;cursor:pointer;color:var(--text);background:var(--panel2);border-radius:12px;padding:12px 14px;transition:background .15s,transform .15s}
+button:active{transform:scale(.98)}
+button.primary{background:var(--accent)}
+button:disabled{opacity:.45;cursor:not-allowed}
+input,textarea{width:100%;background:#11141b;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:12px;outline:none}
+input:focus,textarea:focus{border-color:var(--accent)}
+.hidden{display:none!important}
+#login{min-height:100vh;display:grid;place-items:center;padding:22px}
+.login-card{width:min(100%,390px);background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:0 24px 80px #0005}
+.brand{font-size:13px;font-weight:800;letter-spacing:2px;color:#aaa3ff}
+h1{font-size:25px;margin:10px 0 8px}
+.sub{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 22px}
+#pin{font-size:23px;letter-spacing:7px;text-align:center}
+.error{color:var(--bad);font-size:13px;min-height:20px;margin-top:10px}
+#app{max-width:1160px;margin:auto;padding:20px 20px 36px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.brandline{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#8a7fff,#5345d7);display:grid;place-items:center;font-weight:900;font-size:18px}
+.title{font-weight:800;font-size:18px}
+.subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+.connection{font-size:12px;padding:8px 11px;border-radius:20px;background:#1b3429;color:var(--good);white-space:nowrap}
+.tabs{display:flex;gap:7px;overflow:auto;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:15px;margin-bottom:17px;scrollbar-width:none}
+.tabs button{white-space:nowrap;background:transparent;color:var(--muted);padding:10px 14px;border-radius:10px;font-size:13px}
+.tabs button.active{background:var(--panel2);color:var(--text)}
+.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:17px;min-width:0}
+.metric-label{font-size:12px;color:var(--muted)}
+.metric-value{font-size:25px;font-weight:750;margin:9px 0 8px}
+.track{height:7px;background:#303545;border-radius:8px;overflow:hidden}.fill{height:100%;background:linear-gradient(90deg,#7668ff,#9d91ff);border-radius:8px;width:0;transition:width .35s}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 14px}
+.section-head h2{font-size:16px;margin:0}
+.muted{color:var(--muted);font-size:13px}
+.screen-wrap{background:#050608;border:1px solid var(--line);border-radius:17px;overflow:hidden;min-height:240px;display:grid;place-items:center;position:relative;touch-action:pan-y}
+#screen{width:100%;height:auto;display:block;max-height:70vh;object-fit:contain;touch-action:none}
+.screen-note{padding:16px;color:var(--muted);font-size:13px;text-align:center}
+.screen-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.screen-toolbar button{flex:1;min-width:85px}
+.pad{height:270px;background:linear-gradient(145deg,#232838,#171b25);border:1px solid #353c50;border-radius:20px;display:grid;place-items:center;touch-action:none;user-select:none;color:#aeb6c7;font-size:14px}
+.pad-inner{text-align:center;pointer-events:none}.pad-icon{font-size:34px;margin-bottom:12px}
+.pad-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:11px}
+.key-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:13px}
+.key-grid button{padding:12px 5px;font-size:12px}
+.text-send{display:flex;gap:8px;margin-top:12px}.text-send input{min-width:0}
+.files-toolbar{display:flex;gap:8px;margin-bottom:12px}.files-toolbar input{min-width:0}
+.file-list{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.file-row{display:flex;align-items:center;gap:12px;padding:13px 15px;border-bottom:1px solid var(--line);min-width:0}.file-row:last-child{border-bottom:0}.file-symbol{width:34px;height:34px;background:var(--panel2);border-radius:10px;display:grid;place-items:center;flex:none}.file-info{min-width:0;flex:1}.file-name{font-size:13px;overflow-wrap:anywhere}.file-meta{font-size:11px;color:var(--muted);margin-top:3px}.file-row button{padding:8px 10px;font-size:12px}
+.upload-line{margin-top:12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}.upload-line input{flex:1;min-width:180px;padding:8px}
+.system-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.system-grid button{text-align:left;padding:16px}.system-grid strong{display:block;font-size:14px}.system-grid span{display:block;color:var(--muted);font-size:12px;margin-top:5px}
+.apps-list{display:grid;gap:8px;margin-top:12px}.app-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 13px}.app-row span{font-size:13px;overflow-wrap:anywhere}
+.notice{margin-top:14px;padding:12px 14px;background:#24213b;border:1px solid #3b356b;color:#c8c2ff;border-radius:12px;font-size:12px;line-height:1.45}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#292e3b;color:white;padding:11px 16px;border-radius:12px;font-size:13px;transition:.2s;z-index:10;max-width:90vw;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:700px){#app{padding:14px 12px 28px}.grid{grid-template-columns:1fr 1fr}.card{padding:14px}.metric-value{font-size:22px}.topbar{margin-bottom:14px}.screen-wrap{min-height:190px}.pad{height:245px}}
+@media(max-width:390px){.grid{grid-template-columns:1fr}.connection{font-size:10px}.key-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<section id="login">
+  <div class="login-card">
+    <div class="brand">PC DISTANCE</div>
+    <h1>Connexion à votre PC</h1>
+    <p class="sub">Saisissez le code affiché dans la fenêtre PC Distance sur votre ordinateur.</p>
+    <form id="login-form">
+      <input id="pin" inputmode="numeric" maxlength="8" autocomplete="one-time-code" placeholder="••••••••" aria-label="Code de connexion" required>
+      <button class="primary" type="submit" style="width:100%;margin-top:13px">Se connecter</button>
+    </form>
+    <div id="login-error" class="error"></div>
+  </div>
+</section>
+<main id="app" class="hidden">
+  <header class="topbar">
+    <div class="brandline"><div class="logo">PC</div><div><div class="title">PC Distance</div><div class="subtitle" id="computer-name">Connecté à votre ordinateur</div></div></div>
+    <div class="connection" id="connection-state">● Connecté</div>
+  </header>
+  <nav class="tabs" aria-label="Navigation">
+    <button class="active" data-tab="home">Accueil</button>
+    <button data-tab="screen-panel">Écran</button>
+    <button data-tab="mouse-panel">Souris</button>
+    <button data-tab="files-panel">Fichiers</button>
+    <button data-tab="system-panel">Système</button>
+  </nav>
+  <section id="home" class="panel active">
+    <div class="section-head"><h2>État de l'ordinateur</h2><span class="muted" id="updated-at">Actualisation en cours</span></div>
+    <div class="grid">
+      <div class="card"><div class="metric-label">Processeur</div><div class="metric-value" id="cpu-value">—</div><div class="track"><div class="fill" id="cpu-fill"></div></div></div>
+      <div class="card"><div class="metric-label">Mémoire vive</div><div class="metric-value" id="memory-value">—</div><div class="metric-label" id="memory-detail"></div><div class="track"><div class="fill" id="memory-fill"></div></div></div>
+      <div class="card"><div class="metric-label">Stockage système</div><div class="metric-value" id="disk-value">—</div><div class="metric-label" id="disk-detail"></div><div class="track"><div class="fill" id="disk-fill"></div></div></div>
+    </div>
+    <div class="card" style="margin-top:12px"><div class="section-head"><h2>Accès rapide</h2><span class="muted">Commandes courantes</span></div><div class="system-grid"><button onclick="switchTab('screen-panel')"><strong>▣ Voir l'écran</strong><span>Afficher et contrôler Windows</span></button><button onclick="switchTab('mouse-panel')"><strong>⌁ Pavé tactile</strong><span>Utiliser le téléphone comme souris</span></button><button onclick="switchTab('files-panel')"><strong>▤ Fichiers</strong><span>Parcourir et transférer des fichiers</span></button><button onclick="switchTab('system-panel')"><strong>⚙ Système</strong><span>Applications et commandes</span></button></div></div>
+    <div class="notice" id="control-notice">Le contrôle à distance est en pause. Autorisez-le depuis la fenêtre PC Distance sur votre ordinateur.</div>
+  </section>
+  <section id="screen-panel" class="panel">
+    <div class="section-head"><h2>Écran en direct</h2><span class="muted" id="screen-state">En attente</span></div>
+    <div class="screen-wrap"><img id="screen" alt="Écran de l'ordinateur" draggable="false"><div class="screen-note" id="screen-placeholder">L'image de votre écran apparaîtra ici.</div></div>
+    <div class="screen-toolbar"><button id="refresh-screen">Actualiser</button><button onclick="sendKey(['win','d'])">Afficher le bureau</button><button onclick="sendKey(['alt','tab'])">Changer de fenêtre</button></div>
+    <div class="notice">Touchez l'écran pour déplacer le curseur. Maintenez votre doigt pour glisser. Le contrôle doit être autorisé sur l'ordinateur.</div>
+  </section>
+  <section id="mouse-panel" class="panel">
+    <div class="section-head"><h2>Pavé tactile</h2><span class="muted">Zone de déplacement</span></div>
+    <div class="pad" id="touchpad"><div class="pad-inner"><div class="pad-icon">⌖</div><div>Faites glisser votre doigt ici</div><div style="font-size:11px;color:#7e879a;margin-top:8px">Un doigt : déplacer la souris</div></div></div>
+    <div class="pad-actions"><button onclick="sendClick('left')">Clic gauche</button><button onclick="sendClick('right')">Clic droit</button><button onclick="sendClick('left',true)">Double-clic</button><button onclick="postControl('/api/input/scroll',{amount:5})">Défiler vers le haut</button><button onclick="postControl('/api/input/scroll',{amount:-5})">Défiler vers le bas</button><button onclick="sendClick('middle')">Clic molette</button></div>
+    <div class="key-grid"><button onclick="sendKey('enter')">Entrée</button><button onclick="sendKey('esc')">Échap</button><button onclick="sendKey('backspace')">Retour</button><button onclick="sendKey(['ctrl','c'])">Copier</button><button onclick="sendKey(['ctrl','v'])">Coller</button><button onclick="sendKey(['ctrl','z'])">Annuler</button><button onclick="sendKey(['alt','tab'])">Alt + Tab</button><button onclick="sendKey(['win','d'])">Win + D</button><button onclick="sendKey(['ctrl','shift','esc'])">Gestionnaire</button></div>
+    <div class="text-send"><input id="type-text" placeholder="Écrire du texte sur le PC…" maxlength="4000"><button class="primary" id="send-text">Envoyer</button></div>
+    <div class="notice">Utilisez les boutons de défilement, ou les touches fléchées pour parcourir les pages.</div>
+  </section>
+  <section id="files-panel" class="panel">
+    <div class="section-head"><h2>Explorateur de fichiers</h2><span class="muted">Dossier personnel Windows</span></div>
+    <div class="files-toolbar"><input id="folder-path" value="." aria-label="Chemin du dossier"><button id="open-folder">Ouvrir</button></div>
+    <div class="file-list" id="file-list"><div class="file-row"><div class="file-info">Chargement des fichiers…</div></div></div>
+    <div class="upload-line"><input type="file" id="upload-file"><button class="primary" id="upload-button">Envoyer vers le PC</button></div>
+    <div class="notice">L'explorateur reste limité à votre dossier utilisateur Windows. Les transferts sont limités à 25 Mo par fichier. Un fichier existant ne sera pas remplacé.</div>
+  </section>
+  <section id="system-panel" class="panel">
+    <div class="section-head"><h2>Commandes système</h2><span class="muted">Actions sur votre PC</span></div>
+    <div class="system-grid">
+      <button onclick="systemAction('lock')"><strong>Verrouiller le PC</strong><span>Verrouiller la session Windows</span></button>
+      <button onclick="systemAction('show_desktop')"><strong>Afficher le bureau</strong><span>Réduire les fenêtres ouvertes</span></button>
+      <button onclick="systemAction('task_manager')"><strong>Gestionnaire des tâches</strong><span>Ouvrir le gestionnaire Windows</span></button>
+      <button onclick="systemAction('volume_mute')"><strong>Couper le son</strong><span>Activer ou désactiver le muet</span></button>
+      <button onclick="systemAction('volume_down')"><strong>Diminuer le volume</strong><span>Baisser le niveau sonore</span></button>
+      <button onclick="systemAction('volume_up')"><strong>Augmenter le volume</strong><span>Monter le niveau sonore</span></button>
+    </div>
+    <div class="section-head" style="margin-top:22px"><h2>Applications</h2><button id="refresh-apps">Actualiser</button></div>
+    <div class="muted">Raccourcis disponibles dans le menu Démarrer de Windows.</div>
+    <div class="apps-list" id="apps-list"><div class="muted">Chargement des applications…</div></div>
+    <div class="section-head" style="margin-top:22px"><h2>Presse-papiers</h2><button id="read-clipboard">Lire celui du PC</button></div>
+    <textarea id="clipboard-text" rows="3" placeholder="Le contenu du presse-papiers apparaîtra ici…"></textarea>
+    <button class="primary" id="write-clipboard" style="margin-top:8px">Copier ce texte sur le PC</button>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const $ = selector => document.querySelector(selector)
+let currentTab = 'home'
+let screenTimer = null
+let screenBusy = false
+let pointerDown = false
+let previousPoint = null
+let currentFolder = '.'
+let controlAvailable = false
+
+async function api(url, options = {}) {
+  const settings = {...options, headers:{...(options.headers || {})}}
+  if (settings.body && !(settings.body instanceof FormData)) settings.headers['Content-Type'] = 'application/json'
+  const response = await fetch(url, settings)
+  if (response.status === 401 && url !== '/api/login') {
+    showLogin()
+    throw new Error('Session terminée. Reconnectez-vous.')
+  }
+  const type = response.headers.get('content-type') || ''
+  if (!type.includes('application/json')) {
+    if (!response.ok) throw new Error('La demande a échoué.')
+    return response
+  }
+  const data = await response.json()
+  if (!response.ok) throw new Error(data.error || 'Une erreur est survenue.')
+  return data
+}
+
+function showToast(message) {
+  const toast = $('#toast')
+  toast.textContent = message
+  toast.classList.add('show')
+  clearTimeout(showToast.timer)
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 2400)
+}
+
+function showLogin() {
+  $('#app').classList.add('hidden')
+  $('#login').classList.remove('hidden')
+  stopScreenRefresh()
+}
+
+function showApp() {
+  $('#login').classList.add('hidden')
+  $('#app').classList.remove('hidden')
+  refreshStatus()
+  loadFiles('.')
+  loadApps()
+}
+
+$('#login-form').addEventListener('submit', async event => {
+  event.preventDefault()
+  $('#login-error').textContent = ''
+  try {
+    await api('/api/login', {method:'POST', body:JSON.stringify({pin:$('#pin').value.trim()})})
+    showApp()
+  } catch (error) {
+    $('#login-error').textContent = error.message
+  }
+})
+
+function switchTab(tab) {
+  currentTab = tab
+  document.querySelectorAll('.tabs button').forEach(button => button.classList.toggle('active', button.dataset.tab === tab))
+  document.querySelectorAll('.panel').forEach(panel => panel.classList.toggle('active', panel.id === tab))
+  if (tab === 'screen-panel') startScreenRefresh()
+  else stopScreenRefresh()
+  if (tab === 'files-panel') loadFiles(currentFolder)
+  if (tab === 'system-panel') loadApps()
+}
+
+document.querySelectorAll('.tabs button').forEach(button => button.addEventListener('click', () => switchTab(button.dataset.tab)))
+
+async function refreshStatus() {
+  try {
+    const data = await api('/api/status')
+    $('#computer-name').textContent = data.computer
+    $('#cpu-value').textContent = `${Math.round(data.cpu)}%`
+    $('#memory-value').textContent = `${Math.round(data.memory)}%`
+    $('#memory-detail').textContent = `${data.memory_used} / ${data.memory_total} Go`
+    $('#disk-value').textContent = `${Math.round(data.disk)}%`
+    $('#disk-detail').textContent = `${data.disk_used} / ${data.disk_total} Go`
+    $('#cpu-fill').style.width = `${data.cpu}%`
+    $('#memory-fill').style.width = `${data.memory}%`
+    $('#disk-fill').style.width = `${data.disk}%`
+    controlAvailable = data.control_enabled
+    $('#connection-state').textContent = controlAvailable ? '● Contrôle actif' : '● Contrôle en pause'
+    $('#connection-state').style.background = controlAvailable ? '#1b3429' : '#392b2e'
+    $('#connection-state').style.color = controlAvailable ? 'var(--good)' : '#ffb0b6'
+    $('#control-notice').textContent = controlAvailable ? 'Le contrôle est autorisé. Les commandes envoyées depuis ce téléphone seront exécutées sur le PC.' : 'Le contrôle à distance est en pause. Autorisez-le depuis la fenêtre PC Distance sur votre ordinateur.'
+    $('#updated-at').textContent = `Mis à jour à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`
+  } catch (error) {
+    showToast(error.message)
+  }
+}
+
+setInterval(() => {
+  if (!$('#app').classList.contains('hidden')) refreshStatus()
+}, 4000)
+
+async function refreshScreen() {
+  if (screenBusy || currentTab !== 'screen-panel') return
+  screenBusy = true
+  try {
+    const response = await fetch(`/api/screen?t=${Date.now()}`)
+    if (response.status === 401) {
+      showLogin()
+      return
+    }
+    if (!response.ok) throw new Error('Capture indisponible')
+    const blob = await response.blob()
+    const image = $('#screen')
+    const oldUrl = image.dataset.url
+    const nextUrl = URL.createObjectURL(blob)
+    image.src = nextUrl
+    image.dataset.url = nextUrl
+    image.onload = () => { if (oldUrl) URL.revokeObjectURL(oldUrl) }
+    image.classList.remove('hidden')
+    $('#screen-placeholder').classList.add('hidden')
+    $('#screen-state').textContent = 'Actualisé'
+  } catch (error) {
+    $('#screen-state').textContent = 'En attente de l’écran'
+  } finally {
+    screenBusy = false
+  }
+}
+
+function startScreenRefresh() {
+  stopScreenRefresh()
+  refreshScreen()
+  screenTimer = setInterval(refreshScreen, 300)
+}
+
+function stopScreenRefresh() {
+  if (screenTimer) clearInterval(screenTimer)
+  screenTimer = null
+}
+
+$('#refresh-screen').addEventListener('click', refreshScreen)
+
+async function postControl(url, data) {
+  if (!controlAvailable) {
+    showToast('Autorisez le contrôle depuis le PC.')
+    return
+  }
+  try {
+    await api(url, {method:'POST', body:JSON.stringify(data)})
+  } catch (error) {
+    showToast(error.message)
+  }
+}
+
+async function sendKey(keys) {
+  await postControl('/api/input/key', {keys})
+}
+
+async function sendClick(button = 'left', double = false) {
+  await postControl('/api/input/click', {button, double})
+}
+
+async function systemAction(action) {
+  await postControl('/api/system/action', {action})
+  showToast('Commande envoyée')
+}
+
+function sendScreenPointer(action, event) {
+  const bounds = $('#screen').getBoundingClientRect()
+  if (!bounds.width || !bounds.height) return
+  const x = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width))
+  const y = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height))
+  postControl('/api/input/mouse', {action, x, y})
+}
+
+$('#screen').addEventListener('pointerdown', event => {
+  pointerDown = true
+  $('#screen').setPointerCapture(event.pointerId)
+  sendScreenPointer('down', event)
+})
+$('#screen').addEventListener('pointermove', event => {
+  if (pointerDown) sendScreenPointer('move', event)
+})
+$('#screen').addEventListener('pointerup', event => {
+  if (pointerDown) sendScreenPointer('up', event)
+  pointerDown = false
+})
+$('#screen').addEventListener('pointercancel', () => { pointerDown = false })
+$('#screen').addEventListener('contextmenu', event => event.preventDefault())
+
+const pad = $('#touchpad')
+pad.addEventListener('pointerdown', event => {
+  pad.setPointerCapture(event.pointerId)
+  previousPoint = {x:event.clientX, y:event.clientY}
+})
+pad.addEventListener('pointermove', event => {
+  if (!previousPoint) return
+  const dx = event.clientX - previousPoint.x
+  const dy = event.clientY - previousPoint.y
+  previousPoint = {x:event.clientX, y:event.clientY}
+  if (Math.abs(dx) + Math.abs(dy) > 0) postControl('/api/input/relative', {x:Math.round(dx * 1.8), y:Math.round(dy * 1.8)})
+})
+pad.addEventListener('pointerup', () => { previousPoint = null })
+pad.addEventListener('pointercancel', () => { previousPoint = null })
+pad.addEventListener('contextmenu', event => event.preventDefault())
+pad.addEventListener('wheel', event => {
+  event.preventDefault()
+  postControl('/api/input/scroll', {amount:event.deltaY < 0 ? 3 : -3})
+}, {passive:false})
+
+$('#send-text').addEventListener('click', async () => {
+  const text = $('#type-text').value
+  if (!text) return
+  await postControl('/api/input/text', {text})
+  $('#type-text').value = ''
+  showToast('Texte envoyé')
+})
+$('#type-text').addEventListener('keydown', event => {
+  if (event.key === 'Enter') $('#send-text').click()
+})
+
+function formatSize(size) {
+  if (size === null) return 'Dossier'
+  if (size < 1024) return `${size} octets`
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} Ko`
+  return `${(size / (1024 * 1024)).toFixed(1)} Mo`
+}
+
+async function loadFiles(path = '.') {
+  currentFolder = path || '.'
+  $('#folder-path').value = currentFolder
+  const list = $('#file-list')
+  list.replaceChildren()
+  try {
+    const data = await api(`/api/files?path=${encodeURIComponent(currentFolder)}`)
+    if (currentFolder !== '.') {
+      const parent = currentFolder.split('/').slice(0, -1).join('/') || '.'
+      addFileRow({name:'..',path:parent,directory:true}, true)
+    }
+    data.entries.forEach(entry => addFileRow(entry))
+    if (!data.entries.length && currentFolder === '.') list.textContent = 'Ce dossier est vide.'
+  } catch (error) {
+    list.textContent = error.message
+  }
+}
+
+function addFileRow(entry, parent = false) {
+  const row = document.createElement('div')
+  row.className = 'file-row'
+  const symbol = document.createElement('div')
+  symbol.className = 'file-symbol'
+  symbol.textContent = entry.directory ? '📁' : '📄'
+  const info = document.createElement('div')
+  info.className = 'file-info'
+  const name = document.createElement('div')
+  name.className = 'file-name'
+  name.textContent = entry.name
+  const meta = document.createElement('div')
+  meta.className = 'file-meta'
+  meta.textContent = parent ? 'Dossier parent' : formatSize(entry.size)
+  info.append(name, meta)
+  row.append(symbol, info)
+  if (entry.directory) {
+    const open = document.createElement('button')
+    open.textContent = 'Ouvrir'
+    open.addEventListener('click', () => loadFiles(entry.path))
+    row.append(open)
+  } else {
+    const download = document.createElement('button')
+    download.textContent = 'Télécharger'
+    download.addEventListener('click', () => downloadFile(entry.path))
+    row.append(download)
+  }
+  $('#file-list').append(row)
+}
+
+async function downloadFile(path) {
+  try {
+    const response = await api(`/api/files/download?path=${encodeURIComponent(path)}`)
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = path.split('/').pop()
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    showToast(error.message)
+  }
+}
+
+$('#open-folder').addEventListener('click', () => loadFiles($('#folder-path').value.trim() || '.'))
+$('#folder-path').addEventListener('keydown', event => {
+  if (event.key === 'Enter') loadFiles($('#folder-path').value.trim() || '.')
+})
+$('#upload-button').addEventListener('click', async () => {
+  const file = $('#upload-file').files[0]
+  if (!file) {
+    showToast('Sélectionnez un fichier.')
+    return
+  }
+  if (!controlAvailable) {
+    showToast('Autorisez le contrôle depuis le PC.')
+    return
+  }
+  const form = new FormData()
+  form.append('file', file)
+  form.append('path', currentFolder)
+  try {
+    await api('/api/files/upload', {method:'POST', body:form})
+    $('#upload-file').value = ''
+    await loadFiles(currentFolder)
+    showToast('Fichier envoyé sur le PC')
+  } catch (error) {
+    showToast(error.message)
+  }
+})
+
+async function loadApps() {
+  const list = $('#apps-list')
+  list.replaceChildren()
+  try {
+    const data = await api('/api/apps')
+    if (!data.items.length) {
+      list.textContent = 'Aucun raccourci détecté dans le menu Démarrer.'
+      return
+    }
+    data.items.forEach(item => {
+      const row = document.createElement('div')
+      row.className = 'app-row'
+      const name = document.createElement('span')
+      name.textContent = item.name
+      const launch = document.createElement('button')
+      launch.textContent = 'Ouvrir'
+      launch.addEventListener('click', async () => {
+        await postControl('/api/apps/launch', {path:item.path})
+        showToast(`${item.name} lancé`)
+      })
+      row.append(name, launch)
+      list.append(row)
+    })
+  } catch (error) {
+    list.textContent = error.message
+  }
+}
+
+$('#refresh-apps').addEventListener('click', loadApps)
+$('#read-clipboard').addEventListener('click', async () => {
+  try {
+    const data = await api('/api/clipboard')
+    $('#clipboard-text').value = data.text
+  } catch (error) {
+    showToast(error.message)
+  }
+})
+$('#write-clipboard').addEventListener('click', async () => {
+  await postControl('/api/clipboard', {text:$('#clipboard-text').value})
+  showToast('Presse-papiers mis à jour')
+})
+
+api('/api/status').then(showApp).catch(() => {})
+</script>
+</body>
+</html>
